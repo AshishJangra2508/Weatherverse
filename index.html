@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Weather — Premium weather dashboard with real-time forecasts, air quality, and world weather.">
+  <meta name="theme-color" content="#3B82F6">
+  <title>Weather Dashboard</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ══════════ LEFT SIDEBAR ══════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <a href="#" class="sidebar-logo">
+          <svg class="sidebar-logo-icon" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="16" fill="url(#sLogo)"/>
+            <path d="M12 22c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="18" cy="14" r="2.5" fill="#fff"/>
+            <path d="M18 8V6.5M23.5 10.5l1-1M25 18h1.5M12.5 10.5l-1-1M10.5 18H9" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+            <defs><linearGradient id="sLogo" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#4F6EF7"/><stop offset="1" stop-color="#3B82F6"/></linearGradient></defs>
+          </svg>
+          <span class="sidebar-logo-text">Weather</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-nav-item active" data-section="dashboard">
+          <svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" data-section="search" id="navSearch">
+          <svg viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.6"/><path d="M13 13l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Search</span>
+        </a>
+        <a href="#" class="sidebar-nav-item" data-section="favorites">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 5L10 14.3 5.55 16.7l.85-5-3.6-3.5 5-.7L10 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          <span>Favorites</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Favorites List -->
+      <div class="sidebar-section" id="sidebarFavSection">
+        <div class="sidebar-section-header">
+          <span>Favorites</span>
+        </div>
+        <div class="sidebar-favorites" id="sidebarFavorites">
+          <p class="sidebar-empty">No favorites yet</p>
+        </div>
+        <button class="sidebar-add-btn" id="sidebarAddFav">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Add City
+        </button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Recent Searches -->
+      <div class="sidebar-section" id="sidebarRecentSection">
+        <div class="sidebar-section-header">
+          <span>Recent Searches</span>
+        </div>
+        <div class="sidebar-recents" id="sidebarRecents">
+          <p class="sidebar-empty">No recent searches</p>
+        </div>
+        <button class="sidebar-clear-btn" id="clearRecentsBtn">Clear History</button>
+      </div>
+    </aside>
+
+    <!-- ══════════ MAIN CONTENT ══════════ -->
+    <div class="content-wrapper">
+
+      <!-- Top Bar -->
+      <header class="topbar" id="topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div class="topbar-search" id="topbarSearch">
+          <svg class="topbar-search-icon" viewBox="0 0 18 18" fill="none"><circle cx="7.5" cy="7.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11.5 11.5l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input type="text" class="topbar-search-input" id="searchInput" placeholder="Search for a city..." autocomplete="off" spellcheck="false">
+          <div class="search-dropdown" id="searchDropdown"></div>
+        </div>
+        <button class="topbar-btn topbar-location" id="locationBtn" title="Current Location">
+          <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M9 1v3M9 14v3M1 9h3M14 9h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="topbar-btn-label">Locate Me</span>
+        </button>
+        <div class="topbar-right">
+          <div class="unit-toggle-group" id="unitToggle">
+            <button class="unit-btn active" data-unit="celsius">°C</button>
+            <button class="unit-btn" data-unit="fahrenheit">°F</button>
+          </div>
+          <!-- Utility Panel Button (Visible on Tablet) -->
+          <button class="topbar-icon-btn mobile-only-tablet" id="utilityMenuBtn" aria-label="Toggle Widgets" style="display:none;">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <button class="topbar-icon-btn" id="themeToggle" title="Toggle theme">
+            <svg class="icon-sun" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M9 1.5v2M9 14.5v2M2.4 4.2l1.4 1.4M14.2 14.2l1.4 1.4M1.5 9h2M14.5 9h2M4.2 15.6l1.4-1.4M14.2 3.8l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg class="icon-moon" viewBox="0 0 18 18" fill="none"><path d="M15.1 11.5A6.5 6.5 0 016.5 2.9 7 7 0 1015.1 11.5z" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main scrollable area -->
+      <main class="main" id="mainContent">
+
+        <!-- City Header -->
+        <div class="city-header" id="cityHeader">
+          <div class="city-header-left">
+            <h1 class="city-name" id="cityName"><span class="skeleton skeleton-text-lg"></span></h1>
+            <p class="city-meta" id="cityMeta"><span class="skeleton skeleton-text-sm"></span></p>
+          </div>
+          <button class="city-fav-btn" id="cityFavBtn" title="Toggle Favorite">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 3l2.2 4.5 5 .7-3.6 3.5.85 5L10 14.3 5.55 16.7l.85-5-3.6-3.5 5-.7L10 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <!-- Today's Highlight Banner -->
+        <div class="highlight-banner" id="todaysHighlight">
+          <span class="skeleton skeleton-text-lg"></span>
+        </div>
+
+        <!-- Hero Section -->
+        <section class="hero" id="heroSection">
+          <div class="hero-info">
+            <div class="hero-temp-block">
+              <span class="hero-temp" id="heroTemp"><span class="skeleton skeleton-text-hero"></span></span>
+              <span class="hero-temp-unit" id="heroTempUnit">°C</span>
+            </div>
+            <div class="hero-condition-block">
+              <p class="hero-condition" id="heroCondition"><span class="skeleton skeleton-text-md"></span></p>
+              <p class="hero-feels" id="heroFeels"><span class="skeleton skeleton-text-sm"></span></p>
+            </div>
+            <p class="hero-hilo" id="heroHiLo"><span class="skeleton skeleton-text-sm"></span></p>
+          </div>
+          <div class="hero-illustration" id="heroIllustration">
+            <div class="skeleton skeleton-icon-hero"></div>
+          </div>
+        </section>
+
+        <!-- Info Pills -->
+        <div class="info-pills" id="infoPills">
+          <div class="info-pill">
+            <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M2 7h12M5 1v4M11 1v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span id="pillDate">--</span>
+          </div>
+          <div class="info-pill">
+            <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <span id="pillTime">--</span>
+          </div>
+          <div class="info-pill">
+            <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c-2 2-2 10 0 12M8 2c2 2 2 10 0 12" stroke="currentColor" stroke-width="1.1"/></svg>
+            <span id="pillTimezone">--</span>
+          </div>
+        </div>
+
+        <!-- Weather Details -->
+        <section class="details-section" id="detailsSection">
+          <div class="details-grid" id="detailsGrid">
+            <div class="detail-chip" id="chipHumidity">
+              <div class="detail-chip-icon">💧</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Humidity</span>
+                <span class="detail-chip-value" id="valHumidity">--%</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipWind">
+              <div class="detail-chip-icon">💨</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Wind</span>
+                <span class="detail-chip-value" id="valWind">-- km/h</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipWindDir">
+              <div class="detail-chip-icon">🧭</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Wind Direction</span>
+                <span class="detail-chip-value" id="valWindDir">--</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipPressure">
+              <div class="detail-chip-icon">⏲️</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Pressure</span>
+                <span class="detail-chip-value" id="valPressure">-- hPa</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipVisibility">
+              <div class="detail-chip-icon">👁️</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Visibility</span>
+                <span class="detail-chip-value" id="valVisibility">-- km</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipUV">
+              <div class="detail-chip-icon">☀️</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">UV Index</span>
+                <span class="detail-chip-value" id="valUV">--</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipClouds">
+              <div class="detail-chip-icon">☁️</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Cloud Cover</span>
+                <span class="detail-chip-value" id="valClouds">--%</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipDewpoint">
+              <div class="detail-chip-icon">🌡️</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Dew Point</span>
+                <span class="detail-chip-value" id="valDewpoint">--°</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipRain">
+              <div class="detail-chip-icon">🌧️</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Rain Prob</span>
+                <span class="detail-chip-value" id="valRain">--%</span>
+              </div>
+            </div>
+            <div class="detail-chip" id="chipAQI">
+              <div class="detail-chip-icon">🍃</div>
+              <div class="detail-chip-info">
+                <span class="detail-chip-label">Air Quality</span>
+                <span class="detail-chip-value" id="valAQIChip">--</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Hourly Forecast -->
+        <section class="forecast-section" id="hourlySection">
+          <div class="section-header">
+            <h2 class="section-title">Hourly Forecast</h2>
+            <button class="section-arrow-btn" id="hourlyRight" aria-label="Scroll right">→</button>
+          </div>
+          <div class="hourly-scroll-wrap">
+            <div class="hourly-scroll" id="hourlyScroll">
+              <!-- JS populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 7-Day Forecast -->
+        <section class="forecast-section" id="weeklySection">
+          <div class="section-header">
+            <h2 class="section-title">7-Day Forecast</h2>
+          </div>
+          <div class="weekly-scroll-wrap">
+            <div class="weekly-scroll" id="weeklyScroll">
+              <!-- JS populated -->
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ══════════ RIGHT PANEL ══════════ -->
+    <aside class="right-panel" id="rightPanel">
+
+      <!-- Live Weather Map -->
+      <div class="rp-card rp-map-card" id="mapCard">
+        <div class="rp-card-header">
+          <span class="rp-card-title">Live Radar Map</span>
+          <div class="map-controls">
+            <button class="map-btn" id="layerStandard">Map</button>
+            <button class="map-btn" id="layerSatellite">Sat</button>
+            <button class="map-btn" id="layerTerrain">Terr</button>
+          </div>
+        </div>
+        <div class="rp-map" id="weatherMap"></div>
+      </div>
+
+      <!-- Sunrise, Sunset & Moon -->
+      <div class="rp-card" id="sunCard">
+        <div class="rp-card-header">
+          <span class="rp-card-title">Sun & Moon</span>
+        </div>
+        <div class="sun-arc-wrap">
+          <svg class="sun-arc-svg" viewBox="0 0 240 130" id="sunArcSvg">
+            <defs>
+              <linearGradient id="arcGrad" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stop-color="#F59E0B"/>
+                <stop offset="100%" stop-color="#FB923C"/>
+              </linearGradient>
+            </defs>
+            <path class="sun-arc-track" d="M20 110 A100 100 0 0 1 220 110" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="4 6" opacity="0.15"/>
+            <path class="sun-arc-progress" id="sunArcProgress" d="M20 110 A100 100 0 0 1 220 110" fill="none" stroke="url(#arcGrad)" stroke-width="3" stroke-linecap="round"/>
+            <circle id="sunDot" r="10" fill="#FBBF24" opacity="0">
+              <animate attributeName="opacity" from="0.5" to="1" dur="2s" repeatCount="indefinite" values="1;0.6;1"/>
+            </circle>
+            <line x1="10" y1="110" x2="230" y2="110" stroke="currentColor" stroke-width="1" opacity="0.1"/>
+          </svg>
+        </div>
+        <div class="sun-labels">
+          <div class="sun-label-item">
+            <span class="sun-label-title">Sunrise</span>
+            <span class="sun-label-value" id="sunriseTime">--</span>
+          </div>
+          <div class="sun-label-item" style="align-items:center">
+            <span class="sun-label-title" id="moonLabel">Moon</span>
+            <span class="sun-label-value" id="moonIcon">🌑</span>
+            <span class="sun-label-title" id="moonIllum" style="font-size: 0.65rem; margin-top:2px;"></span>
+          </div>
+          <div class="sun-label-item" style="align-items:flex-end">
+            <span class="sun-label-title">Sunset</span>
+            <span class="sun-label-value" id="sunsetTime">--</span>
+          </div>
+        </div>
+        <div class="daylight-bar-wrap">
+          <span class="daylight-label">Daylight Duration</span>
+          <div class="daylight-bar-row">
+            <div class="daylight-bar-track">
+              <div class="daylight-bar-fill" id="daylightBar"></div>
+            </div>
+            <span class="daylight-value" id="daylightDuration">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Air Quality Index -->
+      <div class="rp-card rp-aqi-card" id="aqiCard">
+        <div class="rp-card-header">
+          <span class="rp-card-title">Air Quality Index</span>
+        </div>
+        <div class="aqi-content">
+          <div class="aqi-circle-wrap">
+            <svg class="aqi-circle-svg" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-width="7" opacity="0.08"/>
+              <circle class="aqi-circle-progress" id="aqiCircle" cx="50" cy="50" r="42" fill="none" stroke="#22C55E" stroke-width="7" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264" transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="aqi-circle-inner">
+              <span class="aqi-number" id="aqiValue">--</span>
+              <span class="aqi-label" id="aqiLabel">Good</span>
+            </div>
+          </div>
+          <div class="aqi-pollutants">
+            <div class="aqi-pollutant"><span class="aqi-p-name">PM2.5</span><span class="aqi-p-val" id="aqiPM25">--</span></div>
+            <div class="aqi-pollutant"><span class="aqi-p-name">PM10</span><span class="aqi-p-val" id="aqiPM10">--</span></div>
+            <div class="aqi-pollutant"><span class="aqi-p-name">CO</span><span class="aqi-p-val" id="aqiCO">--</span></div>
+            <div class="aqi-pollutant"><span class="aqi-p-name">NO₂</span><span class="aqi-p-val" id="aqiNO2">--</span></div>
+            <div class="aqi-pollutant"><span class="aqi-p-name">O₃</span><span class="aqi-p-val" id="aqiO3">--</span></div>
+          </div>
+        </div>
+        <div class="aqi-message" id="aqiMessage" style="margin-top: 16px; font-size: 0.85rem; padding: 12px; background: var(--bg-sidebar); border-radius: 8px;"></div>
+      </div>
+
+      <!-- Weather Alerts -->
+      <div class="rp-card" id="alertsCard">
+        <div class="rp-card-header">
+          <span class="rp-card-title">Weather Alerts</span>
+        </div>
+        <div class="rp-alerts" id="rpAlerts">
+          <p class="rp-empty">No active alerts</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="rp-footer">
+        Created by <strong>Ashish Jangra</strong> · Powered by Open-Meteo & Nominatim
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="toast-container" id="toastContainer"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Load Main Application Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
