@@ -1,0 +1,21 @@
+{
+  "name": "weatherverse",
+  "version": "1.0.0",
+  "description": "Premium weather dashboard with real-time forecasts, air quality, and world weather",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'No build required for vanilla JS project'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": [
+    "weather",
+    "pwa",
+    "dashboard"
+  ],
+  "author": "Ashish Jangra",
+  "license": "MIT",
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.12"
+  }
+}
